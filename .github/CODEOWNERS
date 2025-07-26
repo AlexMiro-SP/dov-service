@@ -1,21 +1,21 @@
 # Global code owners
-* @alexmiro
+* @AlexMiro-SP
 
 # Prisma and database related files
-prisma/ @alexmiro
-*.prisma @alexmiro
+prisma/ @AlexMiro-SP
+*.prisma @AlexMiro-SP
 
 # Configuration files
-package.json @alexmiro
-tsconfig*.json @alexmiro
-eslint.config.mjs @alexmiro
-.prettierrc @alexmiro
-renovate.json @alexmiro
+package.json @AlexMiro-SP
+tsconfig*.json @AlexMiro-SP
+eslint.config.mjs @AlexMiro-SP
+.prettierrc @AlexMiro-SP
+renovate.json @AlexMiro-SP
 
 # CI/CD and deployment
-.github/ @alexmiro
-Dockerfile @alexmiro
-docker-compose.yml @alexmiro
+.github/ @AlexMiro-SP
+Dockerfile @AlexMiro-SP
+docker-compose.yml @AlexMiro-SP
 
 # Documentation
-*.md @alexmiro
+*.md @AlexMiro-SP
