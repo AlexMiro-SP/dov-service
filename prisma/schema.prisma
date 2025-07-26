@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        Role     @default(USER)
+  refreshToken String?  @map("refresh_token")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  
+  // Assignment relations
+  createdAssignments SnippetAssignment[] @relation("AssignmentCreatedBy")
+  updatedAssignments SnippetAssignment[] @relation("AssignmentUpdatedBy")
+  assignmentHistory  AssignmentHistory[]
+  
+  @@map("user")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  USER
+}
+
+model Snippet {
+  id           String       @id @default(uuid())
+  title        String
+  locale       String
+  component    String
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  deletedAt    DateTime?    @map("deleted_at")
+  subSnippets  SubSnippet[]
+  assignments  SnippetAssignment[]
+  @@map("snippet")
+}
+
+enum VariationType {
+  SLIM
+  EVERGREEN
+  DYNAMIC
+}
+
+model SubSnippet {
+  id         String      @id @default(uuid())
+  snippetId  String      @map("snippet_id")
+  snippet    Snippet     @relation(fields: [snippetId], references: [id])
+  type       VariationType @map("variation_type")
+  base       String
+  order      Int?
+  createdAt  DateTime    @default(now()) @map("created_at")
+  paragraphs Paragraph[]
+  @@map("sub_snippet")
+}
+
+model Paragraph {
+  id           String      @id @default(uuid())
+  subSnippetId String      @map("sub_snippet_id")
+  subSnippet   SubSnippet  @relation(fields: [subSnippetId], references: [id], onDelete: Cascade)
+  content      String
+  order        Int?
+  variations   Variation[]
+  @@map("paragraph")
+}
+
+model Variation {
+  id           String     @id @default(uuid())
+  paragraphId  String     @map("paragraph_id")
+  paragraph Paragraph     @relation(fields: [paragraphId], references: [id], onDelete: Cascade)
+  content      String
+  order        Int
+  @@map("variation")
+}
+
+
+
+model CategoryType {
+  id          Int     @id @default(autoincrement())
+  externalId  Int     @unique @map("external_id")
+  deleted     Boolean @default(false)
+  code        String  @db.VarChar(32)
+  name        String  @db.VarChar(128)
+  slug        String  @db.VarChar(128)
+  description String?
+  isActive    Boolean @default(true) @map("is_active")
+  @@map("category_type")
+}
+
+//
+// model MainCategory {
+//   id          Int     @id @default(autoincrement())
+//   externalId  Int     @unique
+//   deleted     Boolean @default(false)
+//   name        String  @db.VarChar(128)
+//   slug        String  @db.VarChar(128)
+//   description String?
+//   isActive    Boolean @default(true)
+//
+//   subMainCategories SubMainCategory[]
+// }
+//
+// model SubMainCategory {
+//   id             Int           @id @default(autoincrement())
+//   externalId     Int           @unique
+//   deleted        Boolean       @default(false)
+//   name           String        @db.VarChar(128)
+//   slug           String        @db.VarChar(128)
+//   description    String?
+//   isActive       Boolean       @default(true)
+//
+//   mainCategoryId Int
+//   mainCategory   MainCategory  @relation(fields: [mainCategoryId], references: [id])
+// }
+
+model TemplateParameter {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  uiCode      String   @map("ui_code")
+  label       String?
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  @@map("template_parameter")
+}
+
+// Assignment system models
+enum AssignmentStatus {
+  PENDING     // created, waiting for sync
+  ACTIVE      // successfully synced with Django
+  FAILED      // sync failed
+  ARCHIVED    // archived by user
+}
+
+enum AssignmentAction {
+  CREATED
+  UPDATED
+  SYNCED
+  SYNC_FAILED
+  ARCHIVED
+  RESTORED
+  DELETED
+}
+
+model SnippetAssignment {
+  id         String   @id @default(uuid())
+  snippetId  String   @map("snippet_id")
+  catType    String   @map("cat_type") // code from Django catType table
+  slug       String   // slug for Django API
+  status     AssignmentStatus @default(PENDING)
+  
+  // Audit trail
+  createdBy  String   @map("created_by")
+  updatedBy  String?  @map("updated_by")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // Django sync metadata
+  syncMetadata Json? @map("sync_metadata")
+  lastSyncAt   DateTime? @map("last_sync_at")
+  
+  // Relations
+  snippet     Snippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  createdUser User    @relation("AssignmentCreatedBy", fields: [createdBy], references: [id])
+  updatedUser User?   @relation("AssignmentUpdatedBy", fields: [updatedBy], references: [id])
+  history     AssignmentHistory[]
+  
+  @@unique([snippetId, catType, slug])
+  @@index([snippetId])
+  @@index([catType])
+  @@index([status])
+  @@map("snippet_assignment")
+}
+
+model AssignmentHistory {
+  id           String   @id @default(uuid())
+  assignmentId String   @map("assignment_id")
+  action       AssignmentAction
+  userId       String   @map("user_id")
+  oldValues    Json?    @map("old_values")
+  newValues    Json?    @map("new_values")
+  metadata     Json?    // IP, User-Agent, etc.
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  assignment SnippetAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User @relation(fields: [userId], references: [id])
+  
+  @@index([assignmentId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("assignment_history")
+}

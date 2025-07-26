@@ -1,0 +1,21 @@
+# Global code owners
+* @alexmiro
+
+# Prisma and database related files
+prisma/ @alexmiro
+*.prisma @alexmiro
+
+# Configuration files
+package.json @alexmiro
+tsconfig*.json @alexmiro
+eslint.config.mjs @alexmiro
+.prettierrc @alexmiro
+renovate.json @alexmiro
+
+# CI/CD and deployment
+.github/ @alexmiro
+Dockerfile @alexmiro
+docker-compose.yml @alexmiro
+
+# Documentation
+*.md @alexmiro

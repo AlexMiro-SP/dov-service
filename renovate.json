@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest",
+    ":automergeBranch"
+  ],
+  "schedule": ["before 6am on sunday"],
+  "timezone": "Asia/Jerusalem",
+  "labels": ["dependencies"],
+  "assignees": ["AlexMiro-SP"],
+  "reviewers": ["AlexMiro-SP"],
+  "packageRules": [
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchPackagePatterns": ["^@types/"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchPackageNames": ["typescript", "eslint", "prettier"],
+      "groupName": "dev tools",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^@nestjs/"],
+      "groupName": "nestjs ecosystem",
+      "schedule": ["before 6am on sunday"],
+      "labels": ["framework", "dependencies"]
+    },
+    {
+      "matchPackageNames": ["@prisma/client", "prisma"],
+      "groupName": "database tools",
+      "schedule": ["before 6am on sunday"],
+      "labels": ["database", "dependencies"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "automerge": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on sunday"]
+  },
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageTopic": "update {{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "rangeStrategy": "bump",
+  "bumpVersion": "patch"
+}

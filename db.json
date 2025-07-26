@@ -1,0 +1,235 @@
+[
+  {
+    "catType": "city",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      }
+    ]
+  },
+  {
+    "catType": "cup",
+    "mainCats": [
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Soccer"]
+      }
+    ]
+  },
+  {
+    "catType": "genre",
+    "mainCats": [
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      }
+    ]
+  },
+  {
+    "catType": "hub",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Festivals",
+        "subMainCats": ["Festivals"]
+      },
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": [
+          "Baseball",
+          "Basketball",
+          "Cricket",
+          "Drafts",
+          "Fight",
+          "Football",
+          "Motorsports",
+          "NFL",
+          "Rugby",
+          "Snooker",
+          "Soccer",
+          "Tennis"
+        ]
+      },
+      {
+        "mainCat": "Theater",
+        "subMainCats": ["Theater"]
+      }
+    ]
+  },
+  {
+    "catType": "league",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": [
+          "Baseball",
+          "Basketball",
+          "Cricket",
+          "Motorsports",
+          "Rugby",
+          "Soccer",
+          "Tennis"
+        ]
+      }
+    ]
+  },
+  {
+    "catType": "needFix",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": [
+          "Basketball",
+          "Drafts",
+          "Fight",
+          "Motorsports",
+          "NFL",
+          "Racing",
+          "Snooker",
+          "Soccer"
+        ]
+      }
+    ]
+  },
+  {
+    "catType": "performer",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Festivals",
+        "subMainCats": ["Festivals"]
+      },
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": [
+          "Baseball",
+          "Basketball",
+          "Cricket",
+          "Drafts",
+          "Fight",
+          "Motorsports",
+          "NFL",
+          "Racing",
+          "Rugby",
+          "Snooker",
+          "Soccer",
+          "Tennis"
+        ]
+      },
+      {
+        "mainCat": "Theater",
+        "subMainCats": ["Comedy", "Theater"]
+      }
+    ]
+  },
+  {
+    "catType": "performerCity",
+    "mainCats": [
+      {
+        "mainCat": "Festivals",
+        "subMainCats": ["Festivals"]
+      },
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      }
+    ]
+  },
+  {
+    "catType": "performerCup",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Basketball", "Rugby", "Soccer"]
+      }
+    ]
+  },
+  {
+    "catType": "subCup",
+    "mainCats": [
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Soccer"]
+      }
+    ]
+  },
+  {
+    "catType": "subLeague",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Baseball", "Basketball", "Cricket", "Motorsports", "Soccer", "Tennis"]
+      }
+    ]
+  },
+  {
+    "catType": "venue",
+    "mainCats": [
+      {
+        "mainCat": null,
+        "subMainCats": null
+      },
+      {
+        "mainCat": "Music",
+        "subMainCats": ["Concerts"]
+      },
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Cricket", "Rugby"]
+      }
+    ]
+  },
+  {
+    "catType": "vs",
+    "mainCats": [
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Basketball", "NFL", "Rugby", "Soccer"]
+      }
+    ]
+  },
+  {
+    "catType": "vsCup",
+    "mainCats": [
+      {
+        "mainCat": "Sports",
+        "subMainCats": ["Rugby", "Soccer"]
+      }
+    ]
+  }
+]
