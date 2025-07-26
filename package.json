@@ -24,7 +24,7 @@
     "prepare": "husky",
     "migrate": "prisma migrate deploy",
     "seed": "prisma db seed",
-    "start:prod:railway": "pnpm migrate && pnpm seed && node dist/main.js"
+    "start:prod:railway": "pnpm build && pnpm migrate && pnpm seed && node dist/main.js"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
