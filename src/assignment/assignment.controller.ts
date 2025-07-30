@@ -96,7 +96,10 @@ export class AssignmentController {
           await this.assignmentService.update(assignment.id, { status: 'ACTIVE' }, user.id);
           console.log(`✅ Assignment ${assignment.id} status updated to ACTIVE`);
         } catch (updateError) {
-          console.error(`❌ Failed to update assignment ${assignment.id}:`, updateError.message);
+          console.error(
+            `❌ Failed to update assignment ${assignment.id}:`,
+            updateError instanceof Error ? updateError.message : 'Unknown error',
+          );
         }
       }
       console.log('✅ Assignment status updates completed');
@@ -108,7 +111,9 @@ export class AssignmentController {
         assignments: savedAssignments,
       };
     } catch (error) {
-      throw new BadRequestException(`Assignment execution failed: ${error.message}`);
+      throw new BadRequestException(
+        `Assignment execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -218,7 +223,7 @@ export class AssignmentController {
     status: 200,
     description: 'Preview data with affected categories',
   })
-  async previewBulkAssignment(@Body() previewData: PreviewAssignmentDto) {
+  async previewBulkAssignment(@Body() previewData: PreviewAssignmentDto): Promise<any> {
     return this.assignmentQueueService.previewAssignment(previewData);
   }
 
@@ -241,7 +246,6 @@ export class AssignmentController {
       ...assignmentData,
       userId: user.id, // Add userId for foreign key constraint
     };
-
 
     await this.assignmentQueueService.queueAssignment(bulkData);
 

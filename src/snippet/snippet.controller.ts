@@ -17,7 +17,7 @@ export class SnippetController {
   @ApiOperation({ summary: 'Create new snippet' })
   @ApiBody({ type: CreateSnippetDto })
   create(@Body() dto: CreateSnippetDto) {
-    return this. snippetService.create(dto);
+    return this.snippetService.create(dto);
   }
 
   @Get()
