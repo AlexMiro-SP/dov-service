@@ -18,7 +18,7 @@ describe('AppController (e2e)', () => {
 
   afterEach(async () => {
     await app.close();
-  });
+  }, 10000); // 10 second timeout for cleanup
 
   describe('Root endpoint', () => {
     it('/ (GET) should return Hello Dov', () => {
