@@ -48,7 +48,7 @@ export class AssignmentHealthController {
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error.message,
         redis: {
           connected: false,
         },
@@ -66,7 +66,7 @@ export class AssignmentHealthController {
     status: 200,
     description: 'Django API test result',
   })
-  async testDjangoConnection(): Promise<any> {
+  async testDjangoConnection() {
     try {
       const testData = {
         snippetId: 'test-snippet',
@@ -86,15 +86,15 @@ export class AssignmentHealthController {
 
       return {
         status: 'success',
-        djangoUrl: process.env.BACKEND_API_URL || 'http://localhost:8000',
+        djangoUrl: process.env.BACKEND_API_URL,
         response: result,
         timestamp: new Date().toISOString(),
-      } as any;
+      };
     } catch (error) {
       return {
         status: 'error',
-        djangoUrl: process.env.BACKEND_API_URL || 'http://localhost:8000',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        djangoUrl: process.env.BACKEND_API_URL,
+        error: error.message,
         timestamp: new Date().toISOString(),
       };
     }

@@ -21,7 +21,7 @@ export class AssignmentWorkerService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     const enableWorker = this.configService.get('ENABLE_ASSIGNMENT_WORKER', 'true') === 'true';
 
     if (enableWorker) {
@@ -33,7 +33,7 @@ export class AssignmentWorkerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.stopWorker();
-    this.redis.disconnect();
+    await this.redis.disconnect();
   }
 
   private startWorker() {
@@ -79,7 +79,7 @@ export class AssignmentWorkerService implements OnModuleInit, OnModuleDestroy {
 
   private async processMessage(messageData: string): Promise<void> {
     try {
-      const assignmentData = JSON.parse(messageData) as BulkAssignmentData;
+      const assignmentData: BulkAssignmentData = JSON.parse(messageData);
       this.logger.log(`Processing assignment: ${assignmentData.assignmentId}`);
 
       await this.assignmentQueueService.processAssignment(assignmentData);
