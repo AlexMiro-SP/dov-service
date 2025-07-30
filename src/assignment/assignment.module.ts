@@ -11,11 +11,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [HttpModule, PrismaModule, RedisModule],
   controllers: [AssignmentController, AssignmentHealthController],
-  providers: [
-    AssignmentService,
-    AssignmentQueueService,
-    AssignmentWorkerService,
-  ],
+  providers: [AssignmentService, AssignmentQueueService, AssignmentWorkerService],
   exports: [AssignmentService, AssignmentQueueService],
 })
 export class AssignmentModule {}
