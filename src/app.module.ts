@@ -16,6 +16,7 @@ import { ParagraphModule } from './paragraph/paragraph.module';
 import { TemplateParameterModule } from './template-parameter/template-parameter.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { CategoryTypeModule } from './category-type/category-type.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CategoryTypeModule } from './category-type/category-type.module';
     TemplateParameterModule,
     AssignmentModule,
     CategoryTypeModule,
+    RedisModule,
   ],
   controllers: [AppController, VariationController],
   providers: [AppService, JwtStrategy, VariationService],

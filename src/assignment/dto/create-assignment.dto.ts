@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsArray, IsNotEmpty, ArrayMinSize } from 'class-validator';
+import { IsString, IsArray, IsNotEmpty, ArrayMinSize, IsOptional } from 'class-validator';
 
 export class CreateAssignmentItemDto {
   @ApiProperty({
@@ -36,4 +36,14 @@ export class CreateAssignmentDto {
   @IsArray()
   @ArrayMinSize(1)
   assignments: CreateAssignmentItemDto[];
+
+  @ApiProperty({
+    description: 'Category types for catType determination (optional)',
+    example: ['performer', 'league'],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  categoryTypes?: string[];
 }
