@@ -1,7 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Redis } from 'ioredis';
-import { AssignmentStatus } from '../assignment/interfaces/assignment-status.interface';
+import Redis from 'ioredis';
+
+export interface AssignmentStatus {
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  timestamp: number;
+  progress?: {
+    processed: number;
+    total: number;
+    failed: number;
+  };
+  results?: any;
+  error?: string;
+}
 
 @Injectable()
 export class RedisService {
@@ -41,7 +52,7 @@ export class RedisService {
     }
 
     try {
-      return JSON.parse(data) as AssignmentStatus;
+      return JSON.parse(data);
     } catch (error) {
       this.logger.error(`Failed to parse assignment status for ${assignmentId}:`, error);
       return null;
@@ -51,18 +62,14 @@ export class RedisService {
   async publishAssignmentToQueue(assignmentData: any): Promise<void> {
     const queueKey = 'assignment-queue';
     await this.redis.lpush(queueKey, JSON.stringify(assignmentData));
-    const assignmentId =
-      assignmentData && typeof assignmentData === 'object' && 'assignmentId' in assignmentData
-        ? (assignmentData as { assignmentId: string }).assignmentId
-        : 'unknown';
-    this.logger.log(`Published assignment ${assignmentId} to queue`);
+    this.logger.log(`Published assignment ${assignmentData.assignmentId} to queue`);
   }
 
   async getQueueLength(): Promise<number> {
     return await this.redis.llen('assignment-queue');
   }
 
-  onModuleDestroy() {
-    this.redis.disconnect();
+  async onModuleDestroy() {
+    await this.redis.disconnect();
   }
 }
