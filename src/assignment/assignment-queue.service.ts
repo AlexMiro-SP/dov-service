@@ -1,11 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { RedisService, AssignmentStatus } from '../redis/redis.service';
+import { RedisService } from '../redis/redis.service';
+import { AssignmentStatus } from './interfaces/assignment-status.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { firstValueFrom } from 'rxjs';
 import { LocaleUtils } from '../common/utils/locale.utils';
 import { TypeMappingUtil } from './utils/type-mapping.util';
+import {
+  DjangoPreviewResponse,
+  DjangoExecuteResponse,
+  DjangoApiError,
+} from './interfaces/django-api.interface';
 import { VariationType } from '@prisma/client';
 
 export interface BulkAssignmentData {
@@ -59,9 +65,13 @@ export class AssignmentQueueService {
         ),
       );
 
-      return response.data;
+      return response.data as DjangoPreviewResponse;
     } catch (error) {
-      this.logger.error('Failed to preview assignment:', error.response?.data || error.message);
+      const apiError = error as DjangoApiError;
+      this.logger.error(
+        'Failed to preview assignment:',
+        apiError?.response?.data || apiError?.message || 'Unknown error',
+      );
       throw new Error('Failed to preview assignment');
     }
   }
@@ -105,12 +115,13 @@ export class AssignmentQueueService {
 
       this.logger.log(`Assignment ${assignmentId} completed successfully`);
     } catch (error) {
-      this.logger.error(`Assignment ${assignmentId} failed:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Assignment ${assignmentId} failed:`, errorMessage);
 
       await this.redisService.setAssignmentStatus(assignmentId, {
         status: 'FAILED',
         timestamp: Date.now(),
-        error: error.message,
+        error: errorMessage,
       });
 
       await this.updateAssignmentStatus(assignmentData.snippetId, 'FAILED');
@@ -133,13 +144,19 @@ export class AssignmentQueueService {
           assignmentData.snippetVariationTypes,
         );
 
-        this.logger.log(
-          `Fetched ${snippetVariations.length} snippet variations for types: ${assignmentData.snippetVariationTypes.join(', ')}`,
-        );
+        if (snippetVariations) {
+          this.logger.log(
+            `Fetched ${snippetVariations.length} snippet variations for types: ${assignmentData.snippetVariationTypes.join(', ')}`,
+          );
+        } else {
+          this.logger.error(
+            'Failed to fetch snippet variations from DB, using provided variations',
+          );
+        }
       } catch (error) {
         this.logger.error(
           'Failed to fetch snippet variations from DB, using provided variations:',
-          error.message,
+          error instanceof Error ? error.message : 'Unknown error',
         );
         // Fallback to provided variations if DB fetch fails
       }
@@ -148,17 +165,17 @@ export class AssignmentQueueService {
     // Expand assignments with slugs arrays into individual assignments
     const expandedAssignments = [];
     for (const assignment of assignmentData.assignments) {
+      // If assignment has slugs array, expand it
       if (assignment.slugs && Array.isArray(assignment.slugs)) {
-        // Expand slugs array into individual assignments
         for (const slug of assignment.slugs) {
           expandedAssignments.push({
             catType: assignment.catType,
             slug: slug,
           });
         }
-      } else if ((assignment as any).slug) {
-        // Already individual assignment (legacy format)
-        expandedAssignments.push(assignment as any);
+      } else {
+        // Single assignment
+        expandedAssignments.push(assignment);
       }
     }
 
@@ -168,13 +185,11 @@ export class AssignmentQueueService {
     // Use real category count from preview for accurate progress tracking
     const totalCategories = assignmentData.totalCategoriesCount || totalAssignments;
 
-
     const batches = [];
 
     for (let i = 0; i < totalAssignments; i += BATCH_SIZE) {
       batches.push(assignments.slice(i, i + BATCH_SIZE));
     }
-
 
     let totalProcessed = 0;
     let totalCategoriesProcessed = 0;
@@ -206,18 +221,19 @@ export class AssignmentQueueService {
           ),
         );
 
-        if (!response.data.success) {
+        const responseData = response.data as DjangoExecuteResponse;
+        if (!responseData?.success) {
           throw new Error(`Django assignment execution failed for batch ${batchNumber}`);
         }
 
         totalProcessed += batch.length;
 
         // Get actual categories processed from Django response
-        const batchCategoriesProcessed = response.data.results?.processed || batch.length;
+        const batchCategoriesProcessed = responseData?.results?.processed || batch.length;
         totalCategoriesProcessed += batchCategoriesProcessed;
 
         // Safely handle results array
-        const batchResults = response.data.results;
+        const batchResults = responseData?.results;
         if (Array.isArray(batchResults)) {
           allResults.push(...batchResults);
         } else if (batchResults) {
@@ -251,9 +267,10 @@ export class AssignmentQueueService {
           await new Promise(resolve => setTimeout(resolve, 10000));
         }
       } catch (error) {
-        this.logger.error(`Batch ${batchNumber}/${batches.length} failed:`, error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Batch ${batchNumber}/${batches.length} failed:`, errorMessage);
         throw new Error(
-          `Assignment failed at batch ${batchNumber}/${batches.length}: ${error.message}`,
+          `Assignment failed at batch ${batchNumber}/${batches.length}: ${errorMessage}`,
         );
       }
     }
@@ -494,7 +511,10 @@ export class AssignmentQueueService {
       const savedData = await this.redisService.getAssignmentStatus(assignmentId);
       this.logger.log(`🔍 REDIS VERIFY:`, JSON.stringify(savedData, null, 2));
     } catch (error) {
-      this.logger.error('❌ REDIS ERROR: Failed to update batch progress in Redis:', error.message);
+      this.logger.error(
+        '❌ REDIS ERROR: Failed to update batch progress in Redis:',
+        error instanceof Error ? error.message : 'Unknown error',
+      );
       // Don't throw - progress update failure shouldn't stop assignment
     }
   }
