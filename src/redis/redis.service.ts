@@ -14,8 +14,8 @@ export class RedisService {
 
     if (redisUrl) {
       // Use Redis URL (for Railway, Heroku, etc.)
-      this.logger.log(`Connecting to Redis using URL: ${redisUrl.replace(/:\/\/.*@/, '://***@')}`);
       this.redis = new Redis(redisUrl, {
+        family: 0, // Enable dual stack lookup (IPv4 and IPv6) for Railway support
         maxRetriesPerRequest: 3,
         lazyConnect: true,
       });
