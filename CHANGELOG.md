@@ -1,3 +1,7 @@
+## <small>1.1.1 (2025-07-31)</small>
+
+* fix: assignment process  (#13) ([398fa7d](https://github.com/AlexMiro-SP/dov-service/commit/398fa7d)), closes [#13](https://github.com/AlexMiro-SP/dov-service/issues/13) [#12](https://github.com/AlexMiro-SP/dov-service/issues/12)
+
 ## 1.1.0 (2025-07-30)
 
 * feat: implement Smart Assignment Wizard with async bulk processing  (#11) ([e795720](https://github.com/AlexMiro-SP/dov-service/commit/e795720)), closes [#11](https://github.com/AlexMiro-SP/dov-service/issues/11)
