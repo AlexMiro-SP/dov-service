@@ -1,3 +1,7 @@
+## <small>1.1.2 (2025-07-31)</small>
+
+* fix: fix redis for compatibility with railway (#14) ([15b3da4](https://github.com/AlexMiro-SP/dov-service/commit/15b3da4)), closes [#14](https://github.com/AlexMiro-SP/dov-service/issues/14)
+
 ## <small>1.1.1 (2025-07-31)</small>
 
 * fix: assignment process  (#13) ([398fa7d](https://github.com/AlexMiro-SP/dov-service/commit/398fa7d)), closes [#13](https://github.com/AlexMiro-SP/dov-service/issues/13) [#12](https://github.com/AlexMiro-SP/dov-service/issues/12)
