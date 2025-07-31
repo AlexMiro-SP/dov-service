@@ -303,7 +303,6 @@ export class AssignmentController {
       results,
       testData: {
         assignmentId: testData.assignmentId,
-        useNativeLogic: testData.useNativeLogic,
         categoryTypes: testData.categoryTypes,
         snippetVariations: testData.snippetVariations?.length || 0,
       },

@@ -6,7 +6,6 @@ import {
   ArrayMinSize,
   IsOptional,
   Matches,
-  IsBoolean,
   IsNumber,
 } from 'class-validator';
 
@@ -83,15 +82,6 @@ export class BulkAssignmentDto {
     chunk_id?: string;
     snippet_id?: string;
   }>;
-
-  @ApiProperty({
-    description: 'Use Django-native assignment logic instead of legacy external chunk generator',
-    example: true,
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  useNativeLogic?: boolean;
 
   @ApiProperty({
     description: 'Total number of categories from preview for accurate progress tracking',
