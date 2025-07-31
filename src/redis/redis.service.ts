@@ -9,13 +9,30 @@ export class RedisService {
   private readonly redis: Redis;
 
   constructor(private configService: ConfigService) {
-    this.redis = new Redis({
-      host: this.configService.get('REDIS_HOST', 'localhost'),
-      port: this.configService.get('REDIS_PORT', 6379),
-      db: this.configService.get('REDIS_DB', 0),
-      maxRetriesPerRequest: 3,
-      lazyConnect: true,
-    });
+    // Support both Redis URL and separate host/port configuration
+    const redisUrl = this.configService.get<string>('REDIS_URL');
+
+    if (redisUrl) {
+      // Use Redis URL (for Railway, Heroku, etc.)
+      this.logger.log(`Connecting to Redis using URL: ${redisUrl.replace(/:\/\/.*@/, '://***@')}`);
+      this.redis = new Redis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+      });
+    } else {
+      // Use separate host/port configuration (for local development)
+      const host = this.configService.get<string>('REDIS_HOST', 'localhost');
+      const port = this.configService.get<number>('REDIS_PORT', 6379);
+      const db = this.configService.get<number>('REDIS_DB', 0);
+      this.logger.log(`Connecting to Redis using host:port - ${host}:${port}, db: ${db}`);
+      this.redis = new Redis({
+        host,
+        port,
+        db,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+      });
+    }
 
     this.redis.on('connect', () => {
       this.logger.log('Connected to Redis');
