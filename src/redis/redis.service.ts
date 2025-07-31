@@ -22,36 +22,8 @@ export class RedisService {
         `Connecting to Redis using ${isPublicUrl ? 'PUBLIC' : 'PRIVATE'} URL: ${redisUrl.substring(0, 8)}***`,
       );
 
-      // Try different approaches for Railway compatibility
-      try {
-        // Approach 1: Parse URL and set family explicitly
-        const parsedUrl = new URL(redisUrl);
-        this.logger.log(`Parsed Redis URL - Host: ${parsedUrl.hostname}, Port: ${parsedUrl.port}`);
-
-        this.redis = new Redis({
-          host: parsedUrl.hostname,
-          port: parseInt(parsedUrl.port) || 6379,
-          username: parsedUrl.username || undefined,
-          password: parsedUrl.password || undefined,
-          family: 0, // Enable dual stack lookup (IPv4 and IPv6) for Railway support
-          maxRetriesPerRequest: 3,
-          lazyConnect: true,
-          connectTimeout: 10000,
-        });
-      } catch (parseError) {
-        // Fallback: Use URL string with family parameter
-        this.logger.warn('Failed to parse Redis URL, using string approach:', parseError);
-        const urlWithFamily = redisUrl.includes('?')
-          ? `${redisUrl}&family=0`
-          : `${redisUrl}?family=0`;
-
-        this.redis = new Redis(urlWithFamily, {
-          family: 0,
-          maxRetriesPerRequest: 3,
-          lazyConnect: true,
-          connectTimeout: 10000,
-        });
-      }
+      // Simple approach: pass URL directly to ioredis (recommended by ioredis docs)
+      this.redis = new Redis(redisUrl);
     } else {
       // Use separate host/port configuration (for local development)
       const host = this.configService.get<string>('REDIS_HOST', 'localhost');
