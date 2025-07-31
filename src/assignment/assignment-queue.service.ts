@@ -25,7 +25,6 @@ export interface BulkAssignmentData {
   snippetVariationTypes?: string[]; // User-selected variation types (SLIM, EVERGREEN, DYNAMIC)
   locale: string;
   snippetVariations?: any[]; // Optional since dov-service fetches from DB based on snippetVariationTypes
-  useNativeLogic?: boolean;
   userId: string; // User ID for assignment creation (required for foreign key constraint)
   totalCategoriesCount?: number; // Total categories from preview for accurate progress tracking
 }
@@ -48,14 +47,22 @@ export class AssignmentQueueService {
     data: Omit<BulkAssignmentData, 'assignmentId' | 'snippetVariations' | 'userId'>,
   ) {
     try {
-      const url = `${this.djangoBaseUrl}/internal-seats/api/assignments/preview/`;
+      const url = `${this.djangoBaseUrl}/internal-seats/dov/assignments/preview/`;
 
       const response = await firstValueFrom(
-        this.httpService.post(url, {
-          assignments: data.assignments,
-          categoryTypes: data.categoryTypes,
-          locale: LocaleUtils.normalizeToDjango(data.locale),
-        }),
+        this.httpService.post(
+          url,
+          {
+            assignments: data.assignments,
+            categoryTypes: data.categoryTypes,
+            locale: LocaleUtils.normalizeToDjango(data.locale),
+          },
+          {
+            headers: {
+              'X-Secret': this.configService.get<string>('DOV_SECRET', ''),
+            },
+          },
+        ),
       );
 
       return response.data as DjangoPreviewResponse;
@@ -122,7 +129,7 @@ export class AssignmentQueueService {
   }
 
   async executeAssignmentInDjango(assignmentData: BulkAssignmentData) {
-    const url = `${this.djangoBaseUrl}/internal-seats/api/assignments/execute/`;
+    const url = `${this.djangoBaseUrl}/internal-seats/dov/assignments/execute/`;
     const BATCH_SIZE = 500; // Optimal batch size for Django processing
     const HTTP_TIMEOUT = 300000; // 5 minutes timeout
 
@@ -204,10 +211,12 @@ export class AssignmentQueueService {
               snippetVariationTypes: assignmentData.snippetVariationTypes,
               locale: LocaleUtils.normalizeToDjango(assignmentData.locale),
               snippetVariations,
-              useNativeLogic: true,
             },
             {
               timeout: HTTP_TIMEOUT, // 5 minutes timeout per batch
+              headers: {
+                'X-Secret': this.configService.get<string>('DOV_SECRET', ''),
+              },
             },
           ),
         );
@@ -590,69 +599,67 @@ export class AssignmentQueueService {
       `✅ Found snippet: ${snippet.title}, component=${snippet.component}, subSnippets count: ${snippet.subSnippets.length}`,
     );
 
-    // Log sub-snippets details
-    snippet.subSnippets.forEach((subSnippet, index) => {
-      this.logger.log(
-        `📄 SubSnippet ${index + 1}: type=${subSnippet.type}, paragraphs=${subSnippet.paragraphs.length}`,
-      );
-    });
-
     // Use component as business type, but map to Django backend format
     const frontendType = snippet.component; // component IS the snippet type (CTA/FAQ/DESCRIPTION)
     const businessType = TypeMappingUtil.mapTypeToBackend(frontendType); // Map DESCRIPTION → DEFAULT for Django
-    this.logger.log(
-      `🏷️ Mapping type: ${frontendType} (frontend) → ${businessType} (Django backend)`,
-    );
 
     // Transform database structure to format expected by Django
     const snippetVariations = [];
 
     for (const subSnippet of snippet.subSnippets) {
-      // Create structured variations for Django Jinja formation
-      const structuredVariations = [];
+      // Create structured paragraphs preserving hierarchy
+      const structuredParagraphs = [];
 
-      // Process base content
+      // Process base content as first "paragraph" if exists
       if (subSnippet.base && subSnippet.base.trim()) {
         const baseParams = this.extractParametersFromContent(subSnippet.base);
-        structuredVariations.push({
-          body: subSnippet.base.trim(),
+        structuredParagraphs.push({
+          content: subSnippet.base.trim(),
           params: baseParams,
+          variations: [], // Base content has no variations
+          isBase: true,
         });
       }
 
-      // Process each paragraph and its variations
+      // Process each paragraph preserving its variations structure
       for (const paragraph of subSnippet.paragraphs) {
-        // Add paragraph content
-        if (paragraph.content && paragraph.content.trim()) {
-          const paragraphParams = this.extractParametersFromContent(paragraph.content);
-          structuredVariations.push({
-            body: paragraph.content.trim(),
-            params: paragraphParams,
-          });
-        }
+        const paragraphVariations = [];
 
-        // Add all variations (Django will handle randomization with random.choice)
+        // Process all variations for this paragraph
         for (const variation of paragraph.variations) {
           if (variation.content && variation.content.trim()) {
             const variationParams = this.extractParametersFromContent(variation.content);
-            structuredVariations.push({
+            paragraphVariations.push({
               body: variation.content.trim(),
               params: variationParams,
+              order: variation.order,
             });
           }
+        }
+
+        // Add paragraph with its variations
+        if (paragraph.content && paragraph.content.trim()) {
+          const paragraphParams = this.extractParametersFromContent(paragraph.content);
+          structuredParagraphs.push({
+            content: paragraph.content.trim(),
+            params: paragraphParams,
+            variations: paragraphVariations,
+            order: paragraph.order,
+            isBase: false,
+          });
         }
       }
 
       const snippetVariation = {
         title: snippet.title, // Real snippet title
-        variations: structuredVariations, // Structured data for Django Jinja formation
+        paragraphs: structuredParagraphs, // ✅ Structured paragraphs preserving hierarchy
         type: businessType, // Business type for Django (CTA/FAQ/DESCRIPTION) determined from component
         snippet_id: snippetId, // Main snippet ID for identification in Django
         variation_type: subSnippet.type, // Frontend variation type (SLIM/EVERGREEN/DYNAMIC)
       };
 
       this.logger.log(
-        `📝 Created snippet variation: business_type=${snippetVariation.type}, snippet_id=${snippetVariation.snippet_id}, variation_type=${snippetVariation.variation_type}, variations_count=${structuredVariations.length}`,
+        `📝 Created snippet variation: business_type=${snippetVariation.type}, snippet_id=${snippetVariation.snippet_id}, variation_type=${snippetVariation.variation_type}, paragraphs_count=${structuredParagraphs.length}`,
       );
       snippetVariations.push(snippetVariation);
     }
