@@ -11,33 +11,35 @@ export class RedisService {
   constructor(private configService: ConfigService) {
     // Support both Redis URL and separate host/port configuration
     // Try REDIS_PUBLIC_URL first (for Railway external access), then REDIS_URL
-    const redisUrl =
-      this.configService.get<string>('REDIS_PUBLIC_URL') ||
-      this.configService.get<string>('REDIS_URL');
-
-    if (redisUrl) {
-      // Use Redis URL (for Railway, Heroku, etc.)
-      const isPublicUrl = this.configService.get<string>('REDIS_PUBLIC_URL');
-      this.logger.log(
-        `Connecting to Redis using ${isPublicUrl ? 'PUBLIC' : 'PRIVATE'} URL: ${redisUrl.substring(0, 8)}***`,
-      );
-
-      // Simple approach: pass URL directly to ioredis (recommended by ioredis docs)
-      this.redis = new Redis(redisUrl);
-    } else {
-      // Use separate host/port configuration (for local development)
-      const host = this.configService.get<string>('REDIS_HOST', 'localhost');
-      const port = this.configService.get<number>('REDIS_PORT', 6379);
-      const db = this.configService.get<number>('REDIS_DB', 0);
-      this.logger.log(`Connecting to Redis using host:port - ${host}:${port}, db: ${db}`);
-      this.redis = new Redis({
-        host,
-        port,
-        db,
-        maxRetriesPerRequest: 3,
-        lazyConnect: true,
-      });
-    }
+    // const redisUrl =
+    //   this.configService.get<string>('REDIS_PUBLIC_URL') ||
+    //   this.configService.get<string>('REDIS_URL');
+    // if (redisUrl) {
+    //   // Use Redis URL (for Railway, Heroku, etc.)
+    //   const isPublicUrl = this.configService.get<string>('REDIS_PUBLIC_URL');
+    //   this.logger.log(
+    //     `Connecting to Redis using ${isPublicUrl ? 'PUBLIC' : 'PRIVATE'} URL: ${redisUrl.substring(0, 8)}***`,
+    //   );
+    //
+    //   // Simple approach: pass URL directly to ioredis (recommended by ioredis docs)
+    //   this.redis = new Redis(redisUrl);
+    // } else {
+    // Use separate host/port configuration (for local development)
+    const host = this.configService.get<string>('REDIS_HOST', 'localhost');
+    const port = this.configService.get<number>('REDIS_PORT', 6379);
+    const db = this.configService.get<number>('REDIS_DB', 0);
+    const username = this.configService.get<string>('REDIS_USER');
+    const password = this.configService.get<string>('REDIS_PASSWORD');
+    this.logger.log(`Connecting to Redis using host:port - ${host}:${port}, db: ${db}`);
+    this.redis = new Redis({
+      host,
+      port,
+      db,
+      ...(username && password ? { username, password } : {}),
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+    });
+    // }
 
     this.redis.on('connect', () => {
       this.logger.log('Connected to Redis');
