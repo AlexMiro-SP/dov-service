@@ -30,16 +30,24 @@ export class RedisService {
     const db = this.configService.get<number>('REDIS_DB', 0);
     const username = this.configService.get<string>('REDIS_USER');
     const password = this.configService.get<string>('REDIS_PASSWORD');
+    const isRailway = this.configService.get<string>('IS_RAILWAY', 'false') === 'true';
+    const railwayRedisUrl = this.configService.get<string>('REDIS_URL');
     this.logger.log(`Connecting to Redis using host:port - ${host}:${port}, db: ${db}`);
-    this.redis = new Redis({
-      host,
-      port,
-      db,
-      ...(username && password ? { username, password } : {}),
-      maxRetriesPerRequest: 3,
-      lazyConnect: true,
-    });
+    this.redis = isRailway
+      ? new Redis(railwayRedisUrl + '?family=0')
+      : new Redis({
+          host,
+          port,
+          db,
+          ...(username && password ? { username, password } : {}),
+          maxRetriesPerRequest: 3,
+          lazyConnect: true,
+        });
     // }
+
+    this.redis.ping().catch(error => {
+      this.logger.error('Redis ping error:', error);
+    });
 
     this.redis.on('connect', () => {
       this.logger.log('Connected to Redis');
